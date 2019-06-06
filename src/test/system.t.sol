@@ -149,7 +149,10 @@ contract SystemTest is DSTest {
         deployer.deployLightSwitch();
         deployer.deployTitle("Tinlake Loan", "TLNT");
         deployer.deployCollateral();
-        deployer.deploy(tkn_, lenderfab, address(appraiser));
+        deployer.deployPile(tkn_);
+        deployer.deployShelf(address(appraiser));
+        deployer.deployValve();
+        deployer.deploy(tkn_, lenderfab);
 
         borrower = new BorrowerUser(address(deployer.reception()),tkn_);
         borrower_ = address(borrower);
