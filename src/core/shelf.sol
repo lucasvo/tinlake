@@ -42,22 +42,20 @@ contract Shelf is TitleOwned {
     modifier auth { require(wards[msg.sender] == 1); _; }
 
     // --- Data ---
-    PileLike public  pile;
-    Title public     title;
-    DebtLike public  debt;
+    PileLike public      pile;
+    Title public         title;
+    DebtLike public      debt;
+    RegistryLike public  principal;
 
     struct Loan {
         address registry;
-        uint256 tokenId;
-        uint price;
-        uint principal;
-        uint initial;
+        uint    tokenId;
+        uint    balance;
     }
 
     mapping (uint => Loan) public    shelf;
     mapping (bytes32 => uint) public nftlookup;
-
-    uint public bags; // sum of all prices
+    uint public                      Balance;
 
     constructor(address pile_, address title_) TitleOwned(title_) public {
         wards[msg.sender] = 1;
@@ -98,35 +96,18 @@ contract Shelf is TitleOwned {
         nftlookup[nft] = 0;
     }
 
-    // ---- Shelf ---
-    function file(uint loan, address registry_, uint nft_, uint principal_) public auth {
-        shelf[loan].registry = registry_;
-        shelf[loan].tokenId = nft_;
-        shelf[loan].principal = principal_;
-        shelf[loan].initial = principal_;
-    }
-
-    function file(uint loan, uint principal_) public auth {
-        shelf[loan].principal = principal_;
-        shelf[loan].initial = principal_;
-    }
-
-    function deposit(uint loan, address usr) public owner(loan) {
-        NFTLike(shelf[loan].registry).transferFrom(usr, address(this), shelf[loan].tokenId);
-        pile.borrow(loan, shelf[loan].principal);
-        shelf[loan].principal = 0;
-    }
-
-    // --- Currency actions ---
+    // --- Shelf: Currency actions ---
     function borrow(uint loan, uint wad) public owner(loan) {
         debt.accrue(loan);
-        // principal.borrow(loan, wad); TODO: reentrancy
+        principal.borrow(loan, wad); // TODO: reentrancy
         debt.inc(loan, wad);
+        shelf[loan].balance = add(shelf[loan].balance, wad)
+        add(Balance, wad);
     }
 
     function repay(uint loan, uint wad) public owner(loan) {
         debt.accrue(loan);
-        // principal.repay(loan, wad); TODO: reentrancy
+        principal.repay(loan, wad); // TODO: reentrancy
         debt.dec(loan, wad);
     }
 
